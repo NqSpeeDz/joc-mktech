@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ro" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz MK Tech S.R.L. | Câștigă Reducerea</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Google Fonts Inter & Orbitron -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
+        }
+        .font-tech {
+            font-family: 'Orbitron', sans-serif;
+        }
+        .neon-glow {
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.25);
+        }
+        .neon-glow-hover:hover {
+            box-shadow: 0 0 35px rgba(6, 182, 212, 0.45);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 selection:bg-cyan-500 selection:text-black">
+
+    <!-- CONTAINER PRINCIPAL -->
+    <div id="app" class="w-full max-w-2xl mx-auto">
+
+        <!-- 1. ECRANUL DE LOADING -->
+        <div id="loading-screen" class="flex flex-col items-center justify-center py-16 px-6 text-center bg-slate-900/80 border border-slate-800 rounded-2xl backdrop-blur-xl shadow-2xl">
+            <div class="relative w-20 h-20 mb-6">
+                <div class="absolute inset-0 rounded-full border-4 border-slate-800"></div>
+                <div class="absolute inset-0 rounded-full border-4 border-cyan-400 border-t-transparent animate-spin"></div>
+            </div>
+            <h1 class="font-tech text-2xl font-bold tracking-wider text-cyan-400 mb-3">MK TECH S.R.L.</h1>
+            <p id="loading-msg" class="text-slate-400 text-sm h-6 transition-all duration-300">Se inițializează sistemul...</p>
+        </div>
+
+        <!-- 2. ECRANUL DE SELECȚIE NIVEL / REDUCERE (Ascuns inițial) -->
+        <div id="level-screen" class="hidden bg-slate-900/90 border border-slate-800 rounded-2xl p-6 md:p-8 backdrop-blur-xl shadow-2xl">
+            <div class="text-center mb-8">
+                <span class="text-xs uppercase font-tech tracking-widest text-cyan-400 bg-cyan-950/50 px-3 py-1 rounded-full border border-cyan-800/50">Firma de Exercițiu</span>
+                <h2 class="font-tech text-2xl md:text-3xl font-extrabold mt-3 text-white">Alege Nivelul & Reducerea</h2>
+                <p class="text-slate-400 text-sm mt-2">Testează-ți cunoștințele IT și câștigă un cupon exclusiv pentru magazinul nostru!</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <!-- Card 5% -->
+                <button onclick="startQuiz('easy')" class="group text-left p-5 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:border-cyan-500 transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+                    <div class="text-2xl mb-2">🥉</div>
+                    <div class="font-tech text-xl font-bold text-cyan-400 group-hover:text-cyan-300">Reducere 5%</div>
+                    <div class="text-xs text-slate-400 mt-2 space-y-1">
+                        <p>• Nivel Ușor</p>
+                        <p>• 5 întrebări (30s/întrebare)</p>
+                        <p>• Prag minim: 3 corecte</p>
+                    </div>
+                </button>
+
+                <!-- Card 10% -->
+                <button onclick="startQuiz('medium')" class="group text-left p-5 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:border-cyan-500 transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+                    <div class="text-2xl mb-2">🥈</div>
+                    <div class="font-tech text-xl font-bold text-cyan-400 group-hover:text-cyan-300">Reducere 10%</div>
+                    <div class="text-xs text-slate-400 mt-2 space-y-1">
+                        <p>• Nivel Mediu</p>
+                        <p>• 7 întrebări (30s/întrebare)</p>
+                        <p>• Prag minim: 5 corecte</p>
+                    </div>
+                </button>
+
+                <!-- Card 15% -->
+                <button onclick="startQuiz('hard')" class="group text-left p-5 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:border-cyan-500 transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+                    <div class="text-2xl mb-2">🥇</div>
+                    <div class="font-tech text-xl font-bold text-cyan-400 group-hover:text-cyan-300">Reducere 15%</div>
+                    <div class="text-xs text-slate-400 mt-2 space-y-1">
+                        <p>• Nivel Avansat</p>
+                        <p>• 10 întrebări (25s/întrebare)</p>
+                        <p>• Prag minim: 8 corecte</p>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. ECRANUL DE QUIZ (Ascuns inițial) -->
+        <div id="quiz-screen" class="hidden bg-slate-900/90 border border-slate-800 rounded-2xl p-6 md:p-8 backdrop-blur-xl shadow-2xl">
+            <!-- Header Quiz -->
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-800">
+                <div>
+                    <span id="quiz-level-badge" class="text-xs font-tech uppercase tracking-wider text-cyan-400 bg-cyan-950/50 px-2.5 py-1 rounded-md border border-cyan-800/40">Nivel</span>
+                    <h3 class="text-sm text-slate-400 mt-1.5">Întrebarea <span id="current-q-num" class="text-white font-bold">1</span> din <span id="total-q-num" class="text-white font-bold">5</span></h3>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="hint-btn" onclick="useHint()" class="text-xs bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 px-3 py-1.5 rounded-lg transition font-medium cursor-pointer">
+                        💡 Indiciu (1)
+                    </button>
+                    <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+                        <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span id="timer-display" class="font-tech font-bold text-cyan-400">20</span>s
+                    </div>
+                </div>
+            </div>
+
+            <!-- Întrebarea -->
+            <div class="mb-6">
+                <h4 id="question-text" class="text-lg md:text-xl font-semibold text-white leading-relaxed">Se încarcă întrebarea...</h4>
+            </div>
+
+            <!-- Opțiuni -->
+            <div id="options-container" class="space-y-3 mb-6">
+                <!-- Generate dinamic prin JS -->
+            </div>
+
+            <!-- Explicație Tehnică (apare după răspuns) -->
+            <div id="explanation-box" class="hidden p-4 rounded-xl bg-slate-800/80 border border-slate-700 text-sm text-slate-300 mb-6">
+                <span class="font-semibold text-cyan-400 block mb-1">Explicație tehnică:</span>
+                <p id="explanation-text"></p>
+            </div>
+
+            <!-- Buton Următoarea Întrebare -->
+            <button id="next-btn" onclick="nextQuestion()" class="hidden w-full py-3 px-6 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-tech font-bold rounded-xl transition duration-200 shadow-lg shadow-cyan-500/20 cursor-pointer">
+                Următoarea Întrebare →
+            </button>
+        </div>
+
+        <!-- 4. ECRANUL FINAL (Ascuns inițial) -->
+        <div id="result-screen" class="hidden bg-slate-900/90 border border-slate-800 rounded-2xl p-6 md:p-8 backdrop-blur-xl shadow-2xl text-center">
+            <div id="result-icon" class="text-5xl mb-4">🎉</div>
+            <h3 id="result-title" class="font-tech text-2xl md:text-3xl font-extrabold text-white mb-2">Felicitări!</h3>
+            <p id="result-subtitle" class="text-slate-400 text-sm mb-6">Ai trecut testul cu succes.</p>
+
+            <div id="coupon-card" class="hidden p-6 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-cyan-500/30 mb-6 relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl"></div>
+                <p class="text-xs uppercase font-tech text-cyan-400 tracking-wider mb-1">Cuponul tău de reducere MK Tech</p>
+                <div id="coupon-code" class="font-tech text-3xl font-black text-white tracking-widest my-3 select-all">MKTECH0000</div>
+                <p class="text-xs text-slate-400">Folosește acest cod pe site-ul nostru oficial la finalizarea comenzii.</p>
+            </div>
+
+            <div id="score-summary" class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 text-sm text-slate-300 mb-6">
+                Scor obținut: <span id="final-score" class="font-bold text-white">0</span> răspunsuri corecte.
+            </div>
+
+            <a id="store-link" href="https://pixelcraft-fo.github.io/MKTech/index.html" target="_blank" class="inline-block w-full py-3.5 px-6 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-tech font-bold rounded-xl transition duration-200 shadow-lg shadow-cyan-500/20 cursor-pointer text-center">
+                Folosește cuponul pe site-ul MK Tech ↗
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        // Baza de date completă cu 24 de întrebări (Ușor, Mediu, Avansat / MK Tech)
+        const allQuestions = {
+            easy: [
+                {
+                    q: "Ce componentă hardware este considerată «creierul» unui calculator?",
+                    options: ["Placa video", "Procesorul (CPU)", "Memoria RAM", "Sursa de alimentare"],
+                    correct: 1,
+                    explanation: "Procesorul (Central Processing Unit) execută instrucțiunile programelor și gestionează calculele aritmetice și logice."
+                },
+                {
+                    q: "Ce tip de stocare este considerat mult mai rapid în comparație cu un HDD tradițional?",
+                    options: ["Unitatea Floppy", "Discul optic DVD", "SSD-ul NVMe", "Memoria Cache L3"],
+                    correct: 2,
+                    explanation: "SSD-urile (Solid State Drive), în special cele NVMe, folosesc memorie flash fără piese în mișcare, oferind viteze net superioare."
+                },
+                {
+                    q: "Ce port este folosit cel mai frecvent astăzi pentru transmiterea semnalului video și audio de înaltă definiție?",
+                    options: ["Portul Serial", "HDMI", "Portul Paralel", "Conectorul PS/2"],
+                    correct: 1,
+                    explanation: "HDMI (High-Definition Multimedia Interface) este standardul dominant pentru conectarea monitoarelor, televizoarelor și consolelor."
+                },
+                {
+                    q: "Care dintre următoarele dispozitive este un periferic exclusiv de ieșire (output)?",
+                    options: ["Tastatura", "Mouse-ul", "Monitorul", "Microfonul"],
+                    correct: 2,
+                    explanation: "Monitorul afișează informațiile vizuale generate de calculator, nefiind utilizat pentru introducerea datelor."
+                },
+                {
+                    q: "Ce reprezintă prescurtarea RAM în informatică?",
+                    options: ["Readily Available Media", "Random Access Memory", "Rapid Audio Module", "Remote Access Mechanism"],
+                    correct: 1,
+                    explanation: "RAM înseamnă Random Access Memory și reprezintă memoria de lucru volatilă a sistemului."
+                }
+            ],
+            medium: [
+                {
+                    q: "Ce funcție principală îndeplinește o sursă de alimentare (PSU) într-un sistem PC?",
+                    options: ["Răcește procesorul în sarcină", "Convertește curentul alternativ din priză în curent continuu la tesiuni sigure", "Stochează permanent sistemul de operare", "Accelerează randarea grafică"],
+                    correct: 1,
+                    explanation: "Sursa preia curentul de la rețea (AC) și îl transformă în tensiuni stabile de +12V, +5V și +3.3V (DC) pentru componente."
+                },
+                {
+                    q: "Ce înseamnă acronimul DPI în specificațiile unui mouse de gaming?",
+                    options: ["Digital Processing Index", "Dots Per Inch", "Data Packet Interaction", "Dual Peripheral Interface"],
+                    correct: 1,
+                    explanation: "DPI (Dots Per Inch) măsoară sensibilitatea senzorului mouse-ului raportat la mișcarea fizică pe pad."
+                },
+                {
+                    q: "Ce reprezintă fenomenul de «Bottleneck» într-un calculator?",
+                    options: ["Supraîncălzirea plăcii video", "Limitarea performanței generale din cauza unei componente mai lente care trage sistemul în jos", "Blocarea sistemului de operare la pornire", "Defectarea sursei de alimentare"],
+                    correct: 1,
+                    explanation: "Bottleneck-ul apare când o componentă (ex: procesor vechi) nu ține pasul cu alta (ex: placă video nouă), limitând potențialul maxim."
+                },
+                {
+                    q: "Care este diferența principală între memoria RAM și stocarea pe SSD?",
+                    options: ["RAM-ul este volatil (se șterge la oprire), în timp ce SSD-ul păstrează datele permanent", "SSD-ul este mult mai lent decât RAM-ul", "Nu există nicio diferență tehnică", "RAM-ul stochează fișiere mari, SSD-ul rulează jocuri"],
+                    correct: 0,
+                    explanation: "RAM-ul are nevoie de curent electric continuu pentru a reține datele active, pe când SSD-ul folosește celule flash non-volatile."
+                },
+                {
+                    q: "Ce este un switch într-o rețea locală de calculatoare (LAN)?",
+                    options: ["Un program antivirus", "Un dispozitiv hardware care conectează calculatoarele și direcționează traficul de date în rețea", "O componentă a plăcii de bază", "Un tip de cablu fibră optică"],
+                    correct: 1,
+                    explanation: "Switch-ul gestionează pachetele de date între dispozitivele conectate într-o rețea locală prin cabluri Ethernet."
+                },
+                {
+                    q: "Ce este un sistem de răcire cu lichid de tip AIO (All-in-One)?",
+                    options: ["O pompă specială pentru răcirea monitorului", "Un sistem compact pre-umplut cu lichid pentru disiparea eficientă a căldurii de pe procesor", "Un sistem de curățare a prafului din carcasă", "O sursă răcită cu apă"],
+                    correct: 1,
+                    explanation: "Coolerele AIO integrează pompa, radiatorul și tuburile într-un circuit închis gata de montare pe CPU."
+                },
+                {
+                    q: "Ce rol are pasta termoconductoare aplicată între procesor și cooler?",
+                    options: ["Lipește fizic procesorul de radiator", "Elimină micro-imperfecțiunile și aerul dintre suprafețe pentru un transfer termic superior", "Alimentează procesorul cu energie suplimentară", "Reduce zgomotul ventilatorului"],
+                    correct: 1,
+                    explanation: "Aerul este un izolator termic slab; pasta umple porii microscopici metalici pentru a asigura răcirea optimă."
+                }
+            ],
+            hard: [
+                {
+                    q: "În ce an a fost înființată Firma de Exercițiu F.E. MK Tech S.R.L.?",
+                    options: ["2008", "2012", "2018", "2023"],
+                    correct: 1,
+                    explanation: "F.E. MK Tech S.R.L. a fost înființată în anul 2012."
+                },
+                {
+                    q: "În cadrul cărei instituții de învățământ și-a început activitatea MK Tech S.R.L.?",
+                    options: ["Colegiul Economic „Mihail Kogălniceanu” din Focșani", "Liceul Teoretic Informatică București", "Colegiul Național Iași", "Universitatea Politehnica Timișoara"],
+                    correct: 0,
+                    explanation: "Firma s-a născut la Colegiul Economic „Mihail Kogălniceanu” din Focșani."
+                },
+                {
+                    q: "Care este profilul principal de activitate al firmei de exercițiu MK Tech S.R.L.?",
+                    options: ["Turism și alimentație publică", "Echipamente IT, birotică, periferice și consumabile", "Confecții textile și modă", "Servicii contabile și audit financiar"],
+                    correct: 1,
+                    explanation: "MK Tech activează în domeniul echipamentelor IT, birotică, unități PC, monitoare și periferice."
+                },
+                {
+                    q: "Cine coordonează activitatea echipei și proiectul MK Tech S.R.L.?",
+                    options: ["Prof. Ion Popescu", "Doamna profesoară Mioara Botezatu", "Prof. Vasile Ionescu", "Prof. Elena Dumitrescu"],
+                    correct: 1,
+                    explanation: "Coordonatorul proiectului MK Tech este doamna profesoară Mioara Botezatu."
+                },
+                {
+                    q: "Din ce clasă face parte echipa curentă care gestionează activitatea MK Tech?",
+                    options: ["Clasa a IX-a B", "Clasa a X-a C", "Clasa a XI-a A", "Clasa a XII-a D"],
+                    correct: 2,
+                    explanation: "Echipa curentă este formată din elevii clasei a XI-a A."
+                },
+                {
+                    q: "Care este misiunea principală promovată pe piață de MK Tech S.R.L.?",
+                    options: ["Cel mai mare preț pentru profit maxim", "Echipamente de calitate la prețuri corecte și raport bun calitate-preț", "Vânzarea exclusivă de software licențiat", "Importul de componente second-hand vechi"],
+                    correct: 1,
+                    explanation: "Misiunea MK Tech pune accent pe calitate înaltă, prețuri corecte și satisfacția partenerilor."
+                },
+                {
+                    q: "Ce reprezintă statutul de „Firmă de Exercițiu” în mediul educațional?",
+                    options: ["O companie multinațională reală cotată la bursă", "O întreprindere virtuală care simulează procesele unei companii reale în scop educativ", "Un magazin online fizic administrat de elevi", "Un laborator de informatică al școlii"],
+                    correct: 1,
+                    explanation: "Firma de exercițiu simulează activitatea economică reală (achiziții, vânzări, marketing) într-un cadru didactic practic."
+                },
+                {
+                    q: "Care este unul dintre obiectivele principale ale participării MK Tech la târgurile firmelor de exercițiu?",
+                    options: ["Obținerea de credite bancare reale", "Dezvoltarea de parteneriate, promovarea portofoliului și dezvoltarea continuă", "Participarea la competiții sportive interșcolare", "Exportul de produse fizice în afara țării"],
+                    correct: 1,
+                    explanation: "Târgurile permit interacțiunea cu alte firme simulate, stabilirea de parteneriate comerciale și promovarea ofertei."
+                },
+                {
+                    q: "Ce tip de produse include oferta comercială a catalogului MK Tech?",
+                    options: ["Monitoare, unități PC, laptopuri, periferice și consumabile pentru birotică", "Piese auto și uleiuri de motor", "Materiale de construcții și scule electrice", "Echipamente medicale de diagnostic"],
+                    correct: 0,
+                    explanation: "Portofoliul MK Tech este dedicat tehnologiei, biroticii și echipamentelor IT moderne."
+                },
+                {
+                    q: "Ce valoare are pragul minim de răspunsuri corecte necesar pentru a obține cuponul de reducere de 15% ?",
+                    options: ["Minimum 5 răspunsuri corecte", "Minimum 7 răspunsuri corecte", "Minimum 8 răspunsuri corecte", "Toate 10 răspunsuri corecte"],
+                    correct: 2,
+                    explanation: "Pentru nivelul avansat (reducere 15%), cerința minimă este de 8 răspunsuri corecte din 10."
+                }
+            ]
+        };
+
+        // Mesaje dinamice pentru ecranul de loading
+        const loadingMessages = [
+            "Se încarcă produsele MK Tech...",
+            "Se configurează componentele hardware...",
+            "Aproape gata...",
+            "Potato a fost pe aici...",
+            "Se pregătesc cupoanele de reducere...",
+            "Se optimizează frecvența sistemului..."
+        ];
+
+        let currentLevel = '';
+        let questionsList = [];
+        let currentIndex = 0;
+        let score = 0;
+        let timer = null;
+        let timeLeft = 20;
+        let hintUsed = false;
+
+        // Verificare regulă "O Singură Încercare" la încărcarea paginii
+        window.addEventListener('DOMContentLoaded', () => {
+            const hasPlayed = localStorage.getItem('mktech_quiz_played');
+            if (hasPlayed === 'true') {
+                showAlreadyPlayedScreen();
+                return;
+            }
+
+            // Animație mesaje loading (2.5 secunde total)
+            let msgIdx = 0;
+            const msgEl = document.getElementById('loading-msg');
+            const interval = setInterval(() => {
+                msgIdx = (msgIdx + 1) % loadingMessages.length;
+                msgEl.textContent = loadingMessages[msgIdx];
+            }, 500);
+
+            setTimeout(() => {
+                clearInterval(interval);
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('level-screen').classList.remove('hidden');
+            }, 2500);
+        });
+
+        function showAlreadyPlayedScreen() {
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('level-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.add('hidden');
+
+            const resScreen = document.getElementById('result-screen');
+            resScreen.classList.remove('hidden');
+
+            document.getElementById('result-icon').textContent = '⚠️';
+            document.getElementById('result-title').textContent = 'Acces Restricționat';
+            document.getElementById('result-subtitle').textContent = 'Ai jucat deja acest quiz!';
+            document.getElementById('coupon-card').classList.add('hidden');
+            document.getElementById('score-summary').classList.add('hidden');
+            
+            const storeBtn = document.getElementById('store-link');
+            storeBtn.textContent = 'Mergi pe site-ul MK Tech ↗';
+        }
+
+        // Pornire quiz pe nivel ales
+        let requiredCorrect = 3;
+        let questionTimeLimit = 20;
+
+        function startQuiz(level) {
+            currentLevel = level;
+            hintUsed = false;
+
+            if (level === 'easy') {
+                requiredCorrect = 3;
+                questionTimeLimit = 30;
+            } else if (level === 'medium') {
+                requiredCorrect = 5;
+                questionTimeLimit = 30;
+            } else if (level === 'hard') {
+                requiredCorrect = 8;
+                questionTimeLimit = 25;
+            }
+
+            // Copiere și amestecare complet aleatorie a întrebărilor
+            const rawQuestions = [...allQuestions[level]];
+            questionsList = rawQuestions.sort(() => Math.random() - 0.5);
+
+            currentIndex = 0;
+            score = 0;
+
+            document.getElementById('level-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('total-q-num').textContent = questionsList.length;
+            document.getElementById('quiz-level-badge').textContent = `Nivel: ${level.toUpperCase()}`;
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentIndex >= questionsList.length) {
+                endQuiz();
+                return;
+            }
+
+            clearInterval(timer);
+            timeLeft = questionTimeLimit;
+            document.getElementById('timer-display').textContent = timeLeft;
+
+            const qData = questionsList[currentIndex];
+            document.getElementById('current-q-num').textContent = currentIndex + 1;
+            document.getElementById('question-text').textContent = qData.q;
+            document.getElementById('explanation-box').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:border-cyan-500 hover:bg-slate-800 transition duration-200 text-slate-200 font-medium cursor-pointer option-btn";
+                btn.textContent = opt;
+                btn.onclick = () => selectAnswer(idx, qData.correct);
+                optionsContainer.appendChild(btn);
+            });
+
+            // Pornire cronometru
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-display').textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    handleTimeout(qData.correct);
+                }
+            }, 1000);
+        }
+
+        function selectAnswer(selectedIndex, correctIndex) {
+            clearInterval(timer);
+            const buttons = document.querySelectorAll('.option-btn');
+            
+            buttons.forEach((btn, idx) => {
+                btn.disabled = true;
+                if (idx === correctIndex) {
+                    btn.classList.remove('bg-slate-800/60', 'border-slate-700/60');
+                    btn.classList.add('bg-emerald-500/20', 'border-emerald-500', 'text-emerald-300');
+                } else if (idx === selectedIndex && idx !== correctIndex) {
+                    btn.classList.remove('bg-slate-800/60', 'border-slate-700/60');
+                    btn.classList.add('bg-rose-500/20', 'border-rose-500', 'text-rose-300');
+                }
+            });
+
+            if (selectedIndex === correctIndex) {
+                score++;
+            }
+
+            showExplanation();
+        }
+
+        function handleTimeout(correctIndex) {
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach((btn, idx) => {
+                btn.disabled = true;
+                if (idx === correctIndex) {
+                    btn.classList.add('bg-emerald-500/20', 'border-emerald-500', 'text-emerald-300');
+                }
+            });
+            showExplanation();
+        }
+
+        function showExplanation() {
+            const qData = questionsList[currentIndex];
+            document.getElementById('explanation-text').textContent = qData.explanation;
+            document.getElementById('explanation-box').classList.remove('hidden');
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function useHint() {
+            if (hintUsed) return;
+            hintUsed = true;
+            document.getElementById('hint-btn').disabled = true;
+            document.getElementById('hint-btn').classList.add('opacity-50', 'cursor-not-allowed');
+
+            const qData = questionsList[currentIndex];
+            const buttons = document.querySelectorAll('.option-btn');
+            let eliminatedCount = 0;
+
+            buttons.forEach((btn, idx) => {
+                if (idx !== qData.correct && eliminatedCount < 2) {
+                    btn.style.opacity = '0.3';
+                    btn.disabled = true;
+                    eliminatedCount++;
+                }
+            });
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            loadQuestion();
+        }
+
+        function endQuiz() {
+            // Setare LocalStorage pentru a bloca reluarea quiz-ului
+            localStorage.setItem('mktech_quiz_played', 'true');
+
+            document.getElementById('quiz-screen').classList.add('hidden');
+            const resScreen = document.getElementById('result-screen');
+            resScreen.classList.remove('hidden');
+
+            document.getElementById('final-score').textContent = `${score} / ${questionsList.length}`;
+
+            // Verificare dacă a câștigat în funcție de pragul minim
+            const hasWon = score >= requiredCorrect;
+
+            if (hasWon) {
+                document.getElementById('result-icon').textContent = '🎉';
+                document.getElementById('result-title').textContent = 'Felicitări, ai câştigat!';
+                document.getElementById('result-subtitle').textContent = `Ai atins pragul necesar pentru nivelul ${currentLevel.toUpperCase()}.`;
+                
+                // Generare cupon bazat pe nivelul jucat (5%, 10%, 15%)
+let minDigits = 1000;
+let maxDigits = 3000;
+
+if (currentLevel === 'easy') {
+    minDigits = 1000;
+    maxDigits = 3000;
+} else if (currentLevel === 'medium') {
+    minDigits = 3001;
+    maxDigits = 7000;
+} else if (currentLevel === 'hard') {
+    minDigits = 7001;
+    maxDigits = 9999;
+}
+
+// Generare număr random exact în intervalul corespunzător nivelului
+const randomDigits = Math.floor(minDigits + Math.random() * (maxDigits - minDigits + 1));
+const couponCode = `MKTECH${randomDigits}`;
+
+document.getElementById('coupon-code').textContent = couponCode;
+document.getElementById('coupon-card').classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
